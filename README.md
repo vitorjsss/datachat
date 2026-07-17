@@ -123,30 +123,9 @@ Deliberadamente **sem LangChain**: para NL→Query são duas chamadas HTTP e um
 `aggregate()`. A abstração custa depuração opaca e esconde exatamente o que o
 projeto precisa demonstrar. A justificativa completa está na Seção 5.5 do relatório.
 
-## Status
-
-| Entrega                       | Status      |
-| ----------------------------- | ----------- |
-| Estudo da base                | ✅          |
-| Importação para o MongoDB     | ✅          |
-| Base + 7 consultas testadas   | ✅          |
-| Arquitetura da solução        | ✅          |
-| Análise das tecnologias       | ✅          |
-| Repositório organizado        | ✅          |
-| Protótipo da interface (mock) | ✅          |
-| Integração com LLM            | ⬜ Semana 2 |
-| Validador de segurança        | ⬜ Semana 2 |
-
 ## Equipe
 
 - Gabriel Azevedo Lira de Farias
 - João Pedro de Queiroz Dantas
 - Vitor Jesus Mamede Soares
 - Vítor Raimundo Fernandes Gabínio
-
-_(Responsabilidade de cada integrante nesta entrega a detalhar.)_
-
-## Licença
-
-Uso acadêmico. O dataset Amazon Reviews 2023 pertence ao McAuley Lab (UCSD) —
-cite o artigo original em qualquer trabalho derivado.
