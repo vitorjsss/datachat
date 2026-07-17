@@ -4,7 +4,7 @@ Interface de consulta em linguagem natural sobre o dataset **Amazon Reviews 2023
 O usuário pergunta em português, um LLM traduz para uma consulta MongoDB, o sistema
 executa e devolve a resposta explicada.
 
-> Projeto acadêmico — _(disciplina, período)_
+> Projeto acadêmico — _(Tópicos Especiais em Computação, 2026.1)_
 
 ---
 
@@ -26,10 +26,10 @@ LLM (explicador)  →  Resposta em português + query + tabela
 
 Recorte usado: categoria **Gift_Cards**.
 
-| Coleção | Documentos | Origem |
-|---|---|---|
-| `reviews` | 152.410 | `Gift_Cards.jsonl.gz` |
-| `products` | 1.137 | `meta_Gift_Cards.jsonl.gz` |
+| Coleção    | Documentos | Origem                     |
+| ---------- | ---------- | -------------------------- |
+| `reviews`  | 152.410    | `Gift_Cards.jsonl.gz`      |
+| `products` | 1.137      | `meta_Gift_Cards.jsonl.gz` |
 
 Junção por `parent_asin`.
 
@@ -111,13 +111,13 @@ streamlit run app/main.py       # interface
 
 ## Stack
 
-| Componente | Tecnologia | Por quê |
-|---|---|---|
-| Banco | MongoDB 7 | O dado já é JSON; `details` tem esquema aberto |
-| Driver | PyMongo | Driver oficial |
-| Interface | Streamlit | Protótipo em horas |
-| LLM | SDK oficial do provedor | Pipeline de agregação é lista de JSON — saída confiável |
-| Config | python-dotenv | Chave de API fora do Git |
+| Componente | Tecnologia              | Por quê                                                 |
+| ---------- | ----------------------- | ------------------------------------------------------- |
+| Banco      | MongoDB 7               | O dado já é JSON; `details` tem esquema aberto          |
+| Driver     | PyMongo                 | Driver oficial                                          |
+| Interface  | Streamlit               | Protótipo em horas                                      |
+| LLM        | SDK oficial do provedor | Pipeline de agregação é lista de JSON — saída confiável |
+| Config     | python-dotenv           | Chave de API fora do Git                                |
 
 Deliberadamente **sem LangChain**: para NL→Query são duas chamadas HTTP e um
 `aggregate()`. A abstração custa depuração opaca e esconde exatamente o que o
@@ -125,17 +125,17 @@ projeto precisa demonstrar. A justificativa completa está na Seção 5.5 do rel
 
 ## Status
 
-| Entrega | Status |
-|---|---|
-| Estudo da base | ✅ |
-| Importação para o MongoDB | ✅ |
-| Base + 7 consultas testadas | ✅ |
-| Arquitetura da solução | ✅ |
-| Análise das tecnologias | ✅ |
-| Repositório organizado | ✅ |
-| Protótipo da interface (mock) | ✅ |
-| Integração com LLM | ⬜ Semana 2 |
-| Validador de segurança | ⬜ Semana 2 |
+| Entrega                       | Status      |
+| ----------------------------- | ----------- |
+| Estudo da base                | ✅          |
+| Importação para o MongoDB     | ✅          |
+| Base + 7 consultas testadas   | ✅          |
+| Arquitetura da solução        | ✅          |
+| Análise das tecnologias       | ✅          |
+| Repositório organizado        | ✅          |
+| Protótipo da interface (mock) | ✅          |
+| Integração com LLM            | ⬜ Semana 2 |
+| Validador de segurança        | ⬜ Semana 2 |
 
 ## Equipe
 
