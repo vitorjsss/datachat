@@ -1,0 +1,52 @@
+flowchart TB
+    Usuario(["Usuário"])
+
+    subgraph APRESENTACAO["Camada de Apresentação — Streamlit"]
+        UI["app/main.py<br/>campo de pergunta · botão Consultar<br/>abas de explicação, query e dados<br/>histórico em st.session_state"]
+    end
+
+    subgraph ORQUESTRACAO["Camada de Orquestração"]
+        ORQ["core/orquestrador.py<br/>sequencia as etapas · trata falhas · mede tempo"]
+        CACHE[("Cache<br/>hash(pergunta) → query")]
+    end
+
+    subgraph LOGICA["Camada de Lógica"]
+        ESQ["Contexto de Esquema<br/>coleções, campos, tipos<br/>+ 3 exemplos few-shot"]
+        TRAD["Tradutor NL→Query<br/>LLM #1 · temperatura 0"]
+        VAL{"Validador de Segurança<br/>bloqueia $out, $merge, drop, update<br/>força $limit ≤ 100<br/>checa campos e coleções"}
+        EXEC["Executor MongoDB<br/>PyMongo · maxTimeMS 15s<br/>serializa ObjectId e Date"]
+        EXPL["Explicador<br/>LLM #2 · temperatura 0.7"]
+    end
+
+    subgraph EXTERNO["Serviços Externos"]
+        LLM["LLM Provider<br/>API HTTPS"]
+        MONGO[("MongoDB · datachat<br/>reviews ≈ 152.410 docs<br/>products ≈ 1.137 docs<br/>junção por parent_asin")]
+    end
+
+    Usuario -->|"pergunta em português"| UI
+    UI -->|"chamada de função<br/>(evolução: HTTP → FastAPI)"| ORQ
+
+    ORQ <-->|"1. consulta cache"| CACHE
+    ORQ -->|"2. carrega esquema"| ESQ
+    ESQ -->|"3. esquema + few-shot"| TRAD
+    TRAD <-->|"4. prompt / JSON"| LLM
+    TRAD -->|"5. pipeline em JSON"| VAL
+
+    VAL -->|"reprovado — retry único<br/>devolve o erro ao LLM"| TRAD
+    VAL -->|"aprovado"| EXEC
+    VAL -.->|"reprovado 2x<br/>erro amigável"| UI
+
+    EXEC <-->|"6. aggregate()"| MONGO
+    EXEC -->|"7. documentos"| EXPL
+    EXPL <-->|"8. resultados / texto"| LLM
+
+    EXPL -->|"9. resposta em português"| ORQ
+    ORQ -->|"10. query + dados + explicação"| UI
+    UI -->|"exibe e grava no histórico"| Usuario
+
+    subgraph ETL["ETL — executado uma vez, offline"]
+        JSONL["Gift_Cards.jsonl.gz<br/>meta_Gift_Cards.jsonl.gz<br/>JSON Lines comprimido"]
+        IMP["scripts/importar_mongo.py<br/>streaming gzip · insert_many em lotes<br/>timestamp int ms → review_date Date<br/>cria 9 índices"]
+    end
+
+    JSONL --> IMP --> MONGO

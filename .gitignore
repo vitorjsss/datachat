@@ -1,0 +1,22 @@
+# Dados — NUNCA versionar (arquivos de centenas de MB)
+data/
+*.jsonl
+*.jsonl.gz
+
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# SO / IDE
+.DS_Store
+.vscode/
+.idea/
