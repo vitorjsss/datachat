@@ -4,7 +4,8 @@ pandas==2.2.3
 python-dotenv==1.0.1
 pytest==8.3.3
 
-# Descomente o SDK do provedor escolhido (Semana 2)
-# anthropic==0.39.0
-# openai==1.55.0
-# google-genai==0.3.0
+# LLM escolhido — ver docs/comparacao_llms.txt (Gemini 7/7 vs Llama 3/7 local)
+google-genai
+
+# Só para o comparativo em scripts/comparar_llms.py (Semana 2) — opcional em produção
+ollama

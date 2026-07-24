@@ -1,0 +1,1175 @@
+<!-- ================================================================
+  BRISAMAR BAKERY — NAVEGACIÓN
+
+  Fondo principal: #17140FF7
+  Color amarillo: #E4CA82
+================================================================= -->
+
+<style>
+    /* ============================================================
+   DESIGN SYSTEM
+============================================================ */
+    .brisa-nav-root {
+        --brisa-primary: #E4CA82;
+        --brisa-primary-light: #F0DDA8;
+        --brisa-primary-dark: #C8A95B;
+
+        --brisa-background: #17140FF7;
+        --brisa-background-soft: #17140FF7;
+        --brisa-card: #241C15;
+        --brisa-card-hover: #302419;
+
+        --brisa-body: #F8F2E5;
+        --brisa-muted: #C9BFAE;
+
+        --brisa-border: rgba(228, 202, 130, 0.18);
+        --brisa-border-strong: rgba(228, 202, 130, 0.48);
+        --brisa-overlay: #17140FF7;
+
+        --brisa-shadow: 0 28px 65px rgba(0, 0, 0, 0.42);
+
+        --brisa-title-font:
+            "Playfair Display",
+            Georgia,
+            serif;
+
+        --brisa-body-font:
+            "DM Sans",
+            Arial,
+            sans-serif;
+
+        --brisa-transition:
+            color 0.25s ease,
+            background-color 0.25s ease,
+            border-color 0.25s ease,
+            opacity 0.25s ease,
+            transform 0.25s ease;
+
+        position: relative !important;
+        z-index: 100 !important;
+
+        width: 100% !important;
+        min-height: 58px !important;
+
+        font-family: var(--brisa-body-font) !important;
+    }
+
+    /* ============================================================
+   RESET
+============================================================ */
+    .brisa-nav-root,
+    .brisa-nav-root *,
+    .brisa-nav-root *::before,
+    .brisa-nav-root *::after {
+        box-sizing: border-box !important;
+    }
+
+    .brisa-nav-root ul {
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+
+    .brisa-nav-root a {
+        color: inherit !important;
+        text-decoration: none !important;
+    }
+
+    .brisa-nav-root button {
+        font: inherit !important;
+    }
+
+    /* ============================================================
+   MAIN NAVIGATION
+============================================================ */
+    .brisa-nav {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+
+        min-height: 58px !important;
+    }
+
+    .brisa-nav-item {
+        position: static !important;
+    }
+
+    .brisa-nav-root .brisa-nav-link {
+        position: relative !important;
+
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+
+        min-height: 58px !important;
+        padding: 17px 18px !important;
+        margin: 0 !important;
+
+        color: var(--brisa-primary) !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+
+        font-family: var(--brisa-body-font) !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.09em !important;
+        text-transform: uppercase !important;
+
+        appearance: none !important;
+        -webkit-appearance: none !important;
+
+        white-space: nowrap !important;
+        cursor: pointer !important;
+
+        transition: var(--brisa-transition) !important;
+    }
+
+    .brisa-nav-link::after {
+        content: "" !important;
+
+        position: absolute !important;
+        right: 18px !important;
+        bottom: 9px !important;
+        left: 18px !important;
+
+        height: 2px !important;
+
+        background: var(--brisa-primary) !important;
+
+        transform: scaleX(0) !important;
+        transform-origin: center !important;
+
+        transition: transform 0.25s ease !important;
+    }
+
+    .brisa-nav-link:hover,
+    .brisa-nav-link:focus-visible,
+    .brisa-nav-item.is-open>.brisa-nav-link {
+        color: var(--brisa-primary-light) !important;
+    }
+
+    .brisa-nav-link:hover::after,
+    .brisa-nav-link:focus-visible::after,
+    .brisa-nav-item.is-open>.brisa-nav-link::after {
+        transform: scaleX(1) !important;
+    }
+
+    /* Caret */
+    .brisa-caret {
+        width: 8px !important;
+        height: 8px !important;
+        flex: 0 0 auto !important;
+
+        transition: transform 0.25s ease !important;
+    }
+
+    .brisa-caret path {
+        fill: currentColor !important;
+    }
+
+    .brisa-nav-item.is-open .brisa-caret {
+        transform: rotate(180deg) !important;
+    }
+
+    /* ============================================================
+   MEGA MENU
+============================================================ */
+    .brisa-mega-menu {
+        position: absolute !important;
+        top: calc(100% + 14px) !important;
+        left: 0;
+
+        width: 100vw !important;
+
+        background: var(--brisa-overlay) !important;
+        border-top: 1px solid var(--brisa-border) !important;
+        border-bottom: 1px solid var(--brisa-border) !important;
+        box-shadow: var(--brisa-shadow) !important;
+
+        -webkit-backdrop-filter: blur(18px) !important;
+        backdrop-filter: blur(18px) !important;
+
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+
+        transform: translateY(12px) !important;
+
+        transition:
+            opacity 0.22s ease,
+            transform 0.22s ease,
+            visibility 0.22s ease !important;
+
+        z-index: 999 !important;
+    }
+
+    .brisa-nav-item.is-open .brisa-mega-menu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+
+        transform: translateY(0) !important;
+    }
+
+    .brisa-mega-inner {
+        width: 100% !important;
+        max-width: 1240px !important;
+
+        margin: 0 auto !important;
+        padding: 42px 4% 48px !important;
+    }
+
+    /* ============================================================
+   MEGA MENU HEADER
+============================================================ */
+    .brisa-mega-header {
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: space-between !important;
+        gap: 34px !important;
+
+        margin-bottom: 30px !important;
+        padding-bottom: 22px !important;
+
+        border-bottom: 1px solid var(--brisa-border) !important;
+    }
+
+    .brisa-mega-eyebrow {
+        margin: 0 0 9px !important;
+
+        color: var(--brisa-primary) !important;
+
+        font-family: var(--brisa-body-font) !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.18em !important;
+        text-transform: uppercase !important;
+    }
+
+    .brisa-mega-title {
+        margin: 0 !important;
+
+        color: var(--brisa-primary) !important;
+
+        font-family: var(--brisa-title-font) !important;
+        font-size: 34px !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+    }
+
+    .brisa-mega-description {
+        max-width: 650px !important;
+
+        margin: 12px 0 0 !important;
+
+        color: var(--brisa-body) !important;
+
+        font-family: var(--brisa-body-font) !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        line-height: 1.7 !important;
+    }
+
+    .brisa-view-all {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        flex-shrink: 0 !important;
+
+        padding: 0 0 7px !important;
+
+        color: var(--brisa-primary) !important;
+        border-bottom: 1px solid var(--brisa-primary) !important;
+
+        font-family: var(--brisa-body-font) !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+
+        transition: var(--brisa-transition) !important;
+    }
+
+    .brisa-view-all:hover,
+    .brisa-view-all:focus-visible {
+        color: var(--brisa-primary-light) !important;
+        border-color: var(--brisa-primary-light) !important;
+    }
+
+    /* ============================================================
+   CATEGORY GRID
+============================================================ */
+    .brisa-category-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+
+    .brisa-category-card {
+        position: relative !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        gap: 20px !important;
+
+        min-height: 160px !important;
+        padding: 24px !important;
+
+        overflow: hidden !important;
+
+        color: var(--brisa-primary) !important;
+        border: 1px solid var(--brisa-border) !important;
+        border-radius: 4px !important;
+
+        transition: var(--brisa-transition) !important;
+    }
+
+    .brisa-category-card::before {
+        content: "" !important;
+
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+
+        height: 3px !important;
+
+        background: var(--brisa-primary) !important;
+
+        transform: scaleX(0) !important;
+        transform-origin: left !important;
+
+        transition: transform 0.3s ease !important;
+    }
+
+    .brisa-category-card:hover,
+    .brisa-category-card:focus-visible {
+        color: var(--brisa-primary-light) !important;
+        border-color: var(--brisa-border-strong) !important;
+
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28) !important;
+
+        transform: translateY(-4px) !important;
+    }
+
+    .brisa-category-card:hover::before,
+    .brisa-category-card:focus-visible::before {
+        transform: scaleX(1) !important;
+    }
+
+    .brisa-category-name {
+        display: block !important;
+        margin: 0 !important;
+
+        color: var(--brisa-primary) !important;
+
+        font-family: var(--brisa-title-font) !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+    }
+
+    .brisa-category-text {
+        display: block !important;
+
+        margin-top: 10px !important;
+
+        color: var(--brisa-muted) !important;
+
+        font-family: var(--brisa-body-font) !important;
+        font-size: 13px !important;
+        font-weight: 400 !important;
+        line-height: 1.6 !important;
+    }
+
+    .brisa-category-arrow {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+
+        color: var(--brisa-primary) !important;
+
+        font-size: 21px !important;
+        line-height: 1 !important;
+
+        transition: transform 0.25s ease !important;
+    }
+
+    .brisa-category-card:hover .brisa-category-arrow {
+        transform: translateX(5px) !important;
+    }
+
+    /* ============================================================
+   BURGER
+============================================================ */
+    .brisa-burger {
+        display: none !important;
+
+        width: 44px !important;
+        height: 44px !important;
+
+        margin-left: auto !important;
+        padding: 0 !important;
+
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+
+        cursor: pointer !important;
+    }
+
+    .brisa-burger span {
+        display: block !important;
+
+        width: 24px !important;
+        height: 2px !important;
+
+        background: var(--brisa-primary) !important;
+
+        transition: var(--brisa-transition) !important;
+    }
+
+    .brisa-nav-root.is-nav-open .brisa-burger span:nth-child(1) {
+        transform: translateY(8px) rotate(45deg) !important;
+    }
+
+    .brisa-nav-root.is-nav-open .brisa-burger span:nth-child(2) {
+        opacity: 0 !important;
+    }
+
+    .brisa-nav-root.is-nav-open .brisa-burger span:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg) !important;
+    }
+
+    /* ============================================================
+   TABLET
+============================================================ */
+    @media (max-width: 1024px) {
+        .brisa-nav-root {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+
+            min-height: 58px !important;
+            padding: 7px 4% !important;
+        }
+
+        .brisa-burger {
+            display: flex !important;
+        }
+
+        .brisa-nav-root.is-nav-open .brisa-burger {
+            position: fixed !important;
+            top: 14px !important;
+            right: 18px !important;
+
+            z-index: 1001 !important;
+        }
+
+        .brisa-nav {
+            display: none !important;
+
+            position: fixed !important;
+            inset: 0 !important;
+
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+
+            padding: 150px 0 40px !important;
+
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            flex-wrap: nowrap !important;
+
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+
+            background: var(--brisa-overlay) !important;
+
+            z-index: 1000 !important;
+        }
+
+        .brisa-nav-root.is-nav-open .brisa-nav {
+            display: flex !important;
+        }
+
+        .brisa-nav-item {
+            width: 100% !important;
+        }
+
+        .brisa-nav-root .brisa-nav-link {
+            justify-content: space-between !important;
+
+            width: 100% !important;
+            min-height: 58px !important;
+
+            padding: 19px 6% !important;
+
+            color: var(--brisa-primary) !important;
+            border-bottom: 1px solid var(--brisa-border) !important;
+
+            font-size: 12px !important;
+        }
+
+        .brisa-nav-link::after {
+            display: none !important;
+        }
+
+        .brisa-mega-menu {
+            position: static !important;
+
+            display: none !important;
+
+            width: 100% !important;
+
+            background: var(--brisa-background-soft) !important;
+            border: 0 !important;
+            border-bottom: 1px solid var(--brisa-border) !important;
+            box-shadow: none !important;
+
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+
+            transform: none !important;
+            transition: none !important;
+        }
+
+        .brisa-nav-item.is-open .brisa-mega-menu {
+            display: block !important;
+        }
+
+        .brisa-mega-inner {
+            padding: 30px 6% 38px !important;
+        }
+
+        .brisa-mega-header {
+            align-items: flex-start !important;
+            flex-direction: column !important;
+            gap: 20px !important;
+        }
+
+        .brisa-category-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    /* ============================================================
+   MOBILE
+============================================================ */
+    @media (max-width: 640px) {
+        .brisa-mega-title {
+            font-size: 27px !important;
+        }
+
+        .brisa-mega-description {
+            font-size: 13px !important;
+        }
+
+        .brisa-category-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .brisa-category-card {
+            min-height: 130px !important;
+            padding: 21px !important;
+        }
+
+        .brisa-category-name {
+            font-size: 18px !important;
+        }
+    }
+</style>
+
+<div class="brisa-nav-root">
+
+    <button type="button" class="brisa-burger" aria-label="Abrir menú" aria-expanded="false"
+        aria-controls="brisa-main-navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <nav aria-label="Navegación principal">
+
+        <ul class="brisa-nav" id="brisa-main-navigation">
+
+            <!-- INICIO -->
+            <li class="brisa-nav-item">
+                <a href="/" class="brisa-nav-link">
+                    Inicio
+                </a>
+            </li>
+
+            <!-- TIENDA -->
+            <li class="brisa-nav-item" data-brisa-dropdown>
+                <button type="button" class="brisa-nav-link" aria-expanded="false" aria-controls="brisa-shop-menu"
+                    data-brisa-trigger>
+                    <span>Tienda</span>
+
+                    <svg class="brisa-caret" viewBox="0 0 448 512" aria-hidden="true">
+                        <path
+                            d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z" />
+                    </svg>
+                </button>
+
+                <div class="brisa-mega-menu" id="brisa-shop-menu" role="menu">
+                    <div class="brisa-mega-inner">
+
+                        <div class="brisa-mega-header">
+
+                            <div>
+                                <p class="brisa-mega-eyebrow">
+                                    Brisamar Bakery
+                                </p>
+
+                                <h2 class="brisa-mega-title">
+                                    Sabores hechos con amor
+                                </h2>
+
+                                <p class="brisa-mega-description">
+                                    Descubre panes artesanales,
+                                    clásicos venezolanos y deliciosas
+                                    opciones dulces y saladas,
+                                    preparadas con ingredientes de
+                                    calidad y dedicación.
+                                </p>
+                            </div>
+
+                            <a class="brisa-view-all" href="/shop/">
+                                Ver todos los productos
+
+                                <span aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                        </div>
+
+                        <div class="brisa-category-grid">
+
+                            <!-- PANADERÍA ARTESANAL -->
+                            <a class="brisa-category-card" href="/product-category/panaderia-artesanal/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Panadería artesanal
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        Productos preparados a mano
+                                        con ingredientes frescos y
+                                        atención a cada detalle.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                            <!-- PANADERÍA VENEZOLANA -->
+                            <a class="brisa-category-card" href="/product-category/panaderia-venezolana/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Panadería venezolana
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        Sabores tradicionales que
+                                        celebran la esencia y la
+                                        calidez de Venezuela.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                            <!-- PANES DULCES -->
+                            <a class="brisa-category-card" href="/product-category/panes-dulces/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Panes dulces
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        Panes suaves y esponjosos,
+                                        ideales para el desayuno,
+                                        la merienda o el postre.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                            <!-- PRODUCTOS SALADOS -->
+                            <a class="brisa-category-card" href="/product-category/productos-salados/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Productos salados
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        Cachitos, empanadas y opciones
+                                        artesanales llenas de sabor.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                            <!-- GOLFEADOS -->
+                            <a class="brisa-category-card" href="/product-category/golfeados/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Golfeados
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        El clásico venezolano en
+                                        versiones tradicionales y
+                                        combinaciones especiales.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                            <!-- PANES RELLENOS -->
+                            <a class="brisa-category-card" href="/product-category/panes-rellenos/">
+                                <span>
+                                    <span class="brisa-category-name">
+                                        Panes rellenos
+                                    </span>
+
+                                    <span class="brisa-category-text">
+                                        Panes artesanales con rellenos
+                                        de guayaba, queso, chocolate,
+                                        pistacho y mucho más.
+                                    </span>
+                                </span>
+
+                                <span class="brisa-category-arrow" aria-hidden="true">
+                                    →
+                                </span>
+                            </a>
+
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <!-- CONTACTO -->
+            <li class="brisa-nav-item">
+                <a href="/contacto/" class="brisa-nav-link">
+                    Contacto
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+<script>
+    (function () {
+        var currentScript = document.currentScript;
+
+        var root =
+            currentScript &&
+                currentScript.previousElementSibling &&
+                currentScript.previousElementSibling.classList.contains(
+                    "brisa-nav-root"
+                )
+                ? currentScript.previousElementSibling
+                : document.querySelector(".brisa-nav-root");
+
+        if (
+            !root ||
+            root.dataset.brisaInitialized === "true"
+        ) {
+            return;
+        }
+
+        root.dataset.brisaInitialized = "true";
+
+        function isInsideHiddenElementorClone() {
+            var element = root.parentElement;
+
+            while (
+                element &&
+                element !== document.body
+            ) {
+                if (
+                    element.classList &&
+                    element.classList.contains(
+                        "elementor-sticky__spacer"
+                    )
+                ) {
+                    return true;
+                }
+
+                var styles =
+                    window.getComputedStyle(element);
+
+                if (
+                    styles.display === "none" ||
+                    styles.visibility === "hidden"
+                ) {
+                    return true;
+                }
+
+                element = element.parentElement;
+            }
+
+            return false;
+        }
+
+        if (isInsideHiddenElementorClone()) {
+            return;
+        }
+
+        var dropdownItems =
+            Array.prototype.slice.call(
+                root.querySelectorAll(
+                    "[data-brisa-dropdown]"
+                )
+            );
+
+        var panels =
+            Array.prototype.slice.call(
+                root.querySelectorAll(
+                    ".brisa-mega-menu"
+                )
+            );
+
+        var burger =
+            root.querySelector(".brisa-burger");
+
+        var tabletBreakpoint = 1024;
+        var closeTimer = null;
+        var hoverCloseDelay = 180;
+        var lockedScrollPosition = 0;
+
+        function isDesktop() {
+            return window.innerWidth > tabletBreakpoint;
+        }
+
+        function positionPanels() {
+            if (!isDesktop()) {
+                panels.forEach(function (panel) {
+                    panel.style.left = "";
+                });
+
+                return;
+            }
+
+            var rootLeft = Math.round(
+                root.getBoundingClientRect().left
+            );
+
+            panels.forEach(function (panel) {
+                panel.style.left =
+                    -rootLeft + "px";
+            });
+        }
+
+        function closeDropdown(item) {
+            item.classList.remove("is-open");
+
+            var trigger =
+                item.querySelector(
+                    "[data-brisa-trigger]"
+                );
+
+            if (trigger) {
+                trigger.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        }
+
+        function closeAllDropdowns() {
+            dropdownItems.forEach(closeDropdown);
+        }
+
+        function openDropdown(item) {
+            window.clearTimeout(closeTimer);
+            positionPanels();
+
+            dropdownItems.forEach(
+                function (otherItem) {
+                    if (otherItem !== item) {
+                        closeDropdown(otherItem);
+                    }
+                }
+            );
+
+            item.classList.add("is-open");
+
+            var trigger =
+                item.querySelector(
+                    "[data-brisa-trigger]"
+                );
+
+            if (trigger) {
+                trigger.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+            }
+        }
+
+        function lockBodyScroll() {
+            lockedScrollPosition =
+                window.scrollY;
+
+            document.body.style.position =
+                "fixed";
+
+            document.body.style.top =
+                "-" + lockedScrollPosition + "px";
+
+            document.body.style.left = "0";
+            document.body.style.right = "0";
+            document.body.style.width = "100%";
+        }
+
+        function unlockBodyScroll() {
+            var bodyWasLocked =
+                document.body.style.position ===
+                "fixed";
+
+            document.body.style.position = "";
+            document.body.style.top = "";
+            document.body.style.left = "";
+            document.body.style.right = "";
+            document.body.style.width = "";
+
+            if (bodyWasLocked) {
+                window.scrollTo(
+                    0,
+                    lockedScrollPosition
+                );
+            }
+        }
+
+        positionPanels();
+
+        window.addEventListener(
+            "load",
+            positionPanels
+        );
+
+        window.addEventListener(
+            "resize",
+            function () {
+                positionPanels();
+
+                if (
+                    isDesktop() &&
+                    root.classList.contains(
+                        "is-nav-open"
+                    )
+                ) {
+                    root.classList.remove(
+                        "is-nav-open"
+                    );
+
+                    if (burger) {
+                        burger.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+                    }
+
+                    closeAllDropdowns();
+                    unlockBodyScroll();
+                }
+            }
+        );
+
+        if (burger) {
+            burger.addEventListener(
+                "click",
+                function () {
+                    var navigationIsOpen =
+                        root.classList.toggle(
+                            "is-nav-open"
+                        );
+
+                    burger.setAttribute(
+                        "aria-expanded",
+                        navigationIsOpen
+                            ? "true"
+                            : "false"
+                    );
+
+                    if (navigationIsOpen) {
+                        lockBodyScroll();
+                    } else {
+                        closeAllDropdowns();
+                        unlockBodyScroll();
+                    }
+                }
+            );
+        }
+
+        dropdownItems.forEach(
+            function (item) {
+                var trigger =
+                    item.querySelector(
+                        "[data-brisa-trigger]"
+                    );
+
+                item.addEventListener(
+                    "mouseenter",
+                    function () {
+                        if (!isDesktop()) {
+                            return;
+                        }
+
+                        openDropdown(item);
+                    }
+                );
+
+                item.addEventListener(
+                    "mouseleave",
+                    function () {
+                        if (!isDesktop()) {
+                            return;
+                        }
+
+                        closeTimer =
+                            window.setTimeout(
+                                function () {
+                                    closeDropdown(item);
+                                },
+                                hoverCloseDelay
+                            );
+                    }
+                );
+
+                if (trigger) {
+                    trigger.addEventListener(
+                        "click",
+                        function () {
+                            var isOpen =
+                                item.classList.contains(
+                                    "is-open"
+                                );
+
+                            if (isOpen) {
+                                closeDropdown(item);
+                            } else {
+                                openDropdown(item);
+                            }
+                        }
+                    );
+
+                    trigger.addEventListener(
+                        "keydown",
+                        function (event) {
+                            if (
+                                event.key === "Escape"
+                            ) {
+                                closeDropdown(item);
+                                trigger.focus();
+                            }
+                        }
+                    );
+                }
+            }
+        );
+
+        root
+            .querySelectorAll(".brisa-nav a")
+            .forEach(function (link) {
+                link.addEventListener(
+                    "click",
+                    function () {
+                        if (isDesktop()) {
+                            return;
+                        }
+
+                        root.classList.remove(
+                            "is-nav-open"
+                        );
+
+                        if (burger) {
+                            burger.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+                        }
+
+                        closeAllDropdowns();
+                        unlockBodyScroll();
+                    }
+                );
+            });
+
+        document.addEventListener(
+            "click",
+            function (event) {
+                if (!root.contains(event.target)) {
+                    closeAllDropdowns();
+                }
+            }
+        );
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key !== "Escape") {
+                    return;
+                }
+
+                closeAllDropdowns();
+
+                if (
+                    root.classList.contains(
+                        "is-nav-open"
+                    )
+                ) {
+                    root.classList.remove(
+                        "is-nav-open"
+                    );
+
+                    if (burger) {
+                        burger.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+                    }
+
+                    unlockBodyScroll();
+                }
+            }
+        );
+    })();
+</script>

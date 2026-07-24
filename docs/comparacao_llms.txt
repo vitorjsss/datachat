@@ -1,0 +1,617 @@
+DataChat NoSQL — Comparação Llama 3.2 3B (local) vs Gemini (nuvem)
+Gerado em: 23/07/2026 21:03
+Modelos: llama3.2:3b (Ollama, local) | gemini-flash-latest (Google, nuvem)
+
+==============================================================================
+Pergunta 1: Quais as avaliações 5 estrelas mais úteis de compras verificadas? Traga só título, votos úteis e id do produto, ordenado por votos úteis, no máximo 10.
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Quais as avaliações 5 estrelas mais úteis de compras verificadas? Traga só título, votos úteis e id do produto, ordenado por votos úteis, no máximo 10.
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "verified_purchase": true,
+      "helpful_vote": 5
+    }
+  },
+  {
+    "$group": {
+      "_id": "$asin",
+      "votos_úteis": { "$sum": "$helpful_vote" },
+      "titulo": { "$first": "$title" }
+    }
+  },
+  {
+    "$sort": {
+      "votos_úteis": -1
+    }
+  },
+  {
+    "$limit": 10
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 7.0, 'json_valido': True, 'executou': True, 'documentos': 10, 'erro': None, 'pergunta': 1}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[{"$match":{"rating":5,"verified_purchase":true}},{"$sort":{"helpful_vote":-1}},{"$limit":10},{"$project":{"_id":0,"title":1,"helpful_vote":1,"parent_asin":1}}]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 5.0, 'json_valido': True, 'executou': True, 'documentos': 10, 'erro': None, 'pergunta': 1}
+
+==============================================================================
+Pergunta 2: Qual a distribuição das notas na base?
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Qual a distribuição das notas na base?
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "rating": { "$ne": null }}
+    },
+    {
+      "$group": {
+        "_id": "$asin",
+        "min": { "$min": ["$rating"] },
+        "max": { "$max": ["$rating"] },
+        "count": { "$count": {} }
+      }
+    },
+    {
+      "$project": {
+        "_id": 1,
+        "min": 1,
+        "max": 1,
+        "count": 1
+      }}
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 5.9, 'json_valido': True, 'executou': False, 'documentos': None, 'erro': "Erro no MongoDB: The $min accumulator is a unary operator, full error: {'ok': 0.0, 'errmsg': 'The $min accumulator is a unary operator', 'code': 40237, 'codeName': 'Location40237'}", 'pergunta': 2}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[
+  {
+    "$group": {
+      "_id": "$rating",
+      "count": {
+        "$sum": 1
+      }
+    }
+  },
+  {
+    "$sort": {
+      "_id": 1
+    }
+  }
+]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 2.9, 'json_valido': True, 'executou': True, 'documentos': 5, 'erro': None, 'pergunta': 2}
+
+==============================================================================
+Pergunta 3: Quais os 10 produtos com melhor nota média, entre os que têm pelo menos 50 avaliações?
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Quais os 10 produtos com melhor nota média, entre os que têm pelo menos 50 avaliações?
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "average_rating": {
+        $gt: 4.0
+      },
+      "rating_number": {
+        $gte: 50
+      }
+    }
+  },
+  {
+    "$group": {
+      "_id": "$parent_asin",
+      "nota_média": {
+        $avg: "$average_rating"
+      }
+    }
+  },
+  {
+    "$sort": {
+      "nota_média": -1
+    }
+  },
+  {
+    "$limit": 10
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 5.8, 'json_valido': False, 'executou': False, 'documentos': None, 'erro': 'JSON inválido: Expecting property name enclosed in double quotes: line 5 column 9 (char 56)', 'pergunta': 3}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[
+  {
+    "$match": {
+      "rating_number": {
+        "$gte": 50
+      }
+    }
+  },
+  {
+    "$sort": {
+      "average_rating": -1,
+      "rating_number": -1
+    }
+  },
+  {
+    "$limit": 10
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "parent_asin": 1,
+      "title": 1,
+      "average_rating": 1,
+      "rating_number": 1
+    }
+  }
+]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 3.2, 'json_valido': True, 'executou': True, 'documentos': 0, 'erro': None, 'pergunta': 3}
+
+==============================================================================
+Pergunta 4: Quais os produtos mais mal avaliados, com nome, loja e preço? Considere só produtos com pelo menos 20 avaliações, no máximo 10.
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Quais os produtos mais mal avaliados, com nome, loja e preço? Considere só produtos com pelo menos 20 avaliações, no máximo 10.
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "average_rating": { "$lt": 3 },
+      "rating_number": { "$gt": 19 }
+    }
+  },
+  {
+    "$lookup": {
+      "from": "products",
+      "localField": "parent_asin",
+      "foreignField": "parent_asin",
+      "as": "product"
+    }
+  },
+  {
+    "$unwind": {
+      "path": "$product",
+      "preserveNullValues": false
+    }
+  },
+  {
+    "$group": {
+      "_id": "$product.title",
+      "nome": { "$first": "$product.title" },
+      "loja": { "$first": "$product.store" },
+      "preco": { "$first": "$product.price" }
+    }
+  },
+  {
+    "$sort": {
+      "average_rating": -1
+    }
+  },
+  {
+    "$limit": 10
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 9.8, 'json_valido': True, 'executou': False, 'documentos': None, 'erro': "Erro no MongoDB: unrecognized option to $unwind stage: preserveNullValues, full error: {'ok': 0.0, 'errmsg': 'unrecognized option to $unwind stage: preserveNullValues', 'code': 28811, 'codeName': 'Location28811'}", 'pergunta': 4}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[
+  {
+    "$match": {
+      "rating_number": {
+        "$gte": 20
+      },
+      "average_rating": {
+        "$ne": null
+      }
+    }
+  },
+  {
+    "$sort": {
+      "average_rating": 1
+    }
+  },
+  {
+    "$limit": 10
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "title": 1,
+      "store": 1,
+      "price": 1,
+      "average_rating": 1
+    }
+  }
+]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 4.1, 'json_valido': True, 'executou': True, 'documentos': 0, 'erro': None, 'pergunta': 4}
+
+==============================================================================
+Pergunta 5: Como evoluiu o volume de avaliações e a nota média por ano, a partir de 2018?
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Como evoluiu o volume de avaliações e a nota média por ano, a partir de 2018?
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "review_date": { "$gte": ISODate("2018-01-01T00:00:00.000Z") }
+    }
+  },
+  {
+    "$group": {
+      "_id": "$parent_asin",
+      "notaMediaAno": { "$avg": "$rating" },
+      "quantidadeAvaliacoesAno": { "$count": "" }
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "notaMediaAno": 1,
+      "quantidadeAvaliacoesAno": 1
+    }
+  },
+  {
+    "$sort": {
+      "notaMediaAno": -1
+    }
+  },
+  {
+    "$group": {
+      "_id": null,
+      "notaMediaAno": { "$push": "$notaMediaAno" },
+      "quantidadeAvaliacoesAno": { "$push": "$quantidadeAvaliacoesAno" }
+    }
+  },
+  {
+    "$project": {
+      "_id": 0
+    }
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 11.4, 'json_valido': False, 'executou': False, 'documentos': None, 'erro': 'JSON inválido: Expecting value: line 4 column 32 (char 53)', 'pergunta': 5}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[
+  {
+    "$match": {
+      "review_date": {
+        "$gte": {
+          "$date": "2018-01-01T00:00:00.000Z"
+        }
+      }
+    }
+  },
+  {
+    "$group": {
+      "_id": {
+        "$year": "$review_date"
+      },
+      "total_avaliacoes": {
+        "$sum": 1
+      },
+      "nota_media": {
+        "$avg": "$rating"
+      }
+    }
+  },
+  {
+    "$sort": {
+      "_id": 1
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "ano": "$_id",
+      "total_avaliacoes": 1,
+      "nota_media": 1
+    }
+  }
+]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 4.5, 'json_valido': True, 'executou': True, 'documentos': 0, 'erro': None, 'pergunta': 5}
+
+==============================================================================
+Pergunta 6: Quais atributos existem no campo details dos produtos e com que frequência aparecem? No máximo 15.
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Quais atributos existem no campo details dos produtos e com que frequência aparecem? No máximo 15.
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "details": { "$exists": true }
+    }
+  },
+  {
+    "$project": {
+      "details": {
+        "$map": {
+          "input": "$details",
+          "as": "key",
+          "in": "$$value"
+        }
+      }
+    }
+  },
+  {
+    "$group": {
+      "_id": "$parent_asin",
+      "details": { "$addToSet": "$details" }
+    }
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 5.3, 'json_valido': True, 'executou': False, 'documentos': None, 'erro': "Erro no MongoDB: Invalid $project :: caused by :: Use of undefined variable: value, full error: {'ok': 0.0, 'errmsg': 'Invalid $project :: caused by :: Use of undefined variable: value', 'code': 17276, 'codeName': 'Location17276'}", 'pergunta': 6}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[{"$match":{"details":{"$type":"object"}}},{"$project":{"details_array":{"$objectToArray":"$details"}}},{"$unwind":"$details_array"},{"$group":{"_id":"$details_array.k","frequencia":{"$sum":1}}},{"$sort":{"frequencia":-1}},{"$limit":15},{"$project":{"atributo":"$_id","frequencia":1,"_id":0}}]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 6.2, 'json_valido': True, 'executou': True, 'documentos': 0, 'erro': None, 'pergunta': 6}
+
+==============================================================================
+Pergunta 7: Quais os 5 produtos que concentram mais avaliações, com nome e nota média?
+==============================================================================
+
+--- INPUT enviado (idêntico para os dois modelos) ---
+[system instruction]
+Você traduz perguntas em português para pipelines de agregação do MongoDB.
+
+Banco MongoDB "datachat" com duas coleções:
+
+reviews (avaliações de produtos):
+  rating: double (1.0 a 5.0) | title: string | text: string | asin: string
+  parent_asin: string (chave de junção com products) | user_id: string
+  review_date: date | verified_purchase: bool | helpful_vote: int
+
+products (metadados de produtos):
+  parent_asin: string | title: string | main_category: string
+  average_rating: double | rating_number: int | price: double (pode ser null)
+  store: string | features: array<string> | categories: array<string>
+  details: object (esquema aberto)
+
+Junção reviews x products é feita por parent_asin usando $lookup.
+
+Responda APENAS com um array JSON válido representando os estágios do pipeline
+(ex.: [{"$match": {...}}, {"$group": {...}}]). Sem explicação, sem markdown,
+sem texto antes ou depois — só o JSON do array.
+
+[user]
+Quais os 5 produtos que concentram mais avaliações, com nome e nota média?
+
+--- OUTPUT: Llama 3.2 3B (local) ---
+[
+  {
+    "$match": {
+      "average_rating": { $ne: null },
+      "rating_number": { $gt: 0 }
+    }
+  },
+  {
+    "$group": {
+      "_id": "$parent_asin",
+      "nome": { $first: "$title" },
+      "nota_media": { $avg: "$average_rating" }
+    }
+  },
+  {
+    "$sort": {
+      "nota_media": -1
+    }
+  },
+  {
+    "$limit": 5
+  }
+]
+[avaliação] {'modelo': 'Llama 3.2 3B (local)', 'tempo_s': 5.8, 'json_valido': False, 'executou': False, 'documentos': None, 'erro': 'JSON inválido: Expecting property name enclosed in double quotes: line 4 column 27 (char 48)', 'pergunta': 7}
+
+--- OUTPUT: Gemini (gemini-flash-latest, nuvem) ---
+[
+  {
+    "$group": {
+      "_id": "$parent_asin",
+      "total_avaliacoes": {
+        "$sum": 1
+      },
+      "nota_media": {
+        "$avg": "$rating"
+      }
+    }
+  },
+  {
+    "$sort": {
+      "total_avaliacoes": -1
+    }
+  },
+  {
+    "$limit": 5
+  },
+  {
+    "$lookup": {
+      "from": "products",
+      "localField": "_id",
+      "foreignField": "parent_asin",
+      "as": "product_info"
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "nome": {
+        "$arrayElemAt": [
+          "$product_info.title",
+          0
+        ]
+      },
+      "nota_media": 1,
+      "total_avaliacoes": 1
+    }
+  }
+]
+[avaliação] {'modelo': 'Gemini (gemini-flash-latest)', 'tempo_s': 6.5, 'json_valido': True, 'executou': True, 'documentos': 5, 'erro': None, 'pergunta': 7}
+
+
+==============================================================================
+RESUMO
+==============================================================================
+
+Gemini (gemini-flash-latest):
+  JSON válido:        7/7
+  Executou sem erro:  7/7
+  Tempo médio:        4.6s
+
+Llama 3.2 3B (local):
+  JSON válido:        4/7
+  Executou sem erro:  1/7
+  Tempo médio:        7.3s

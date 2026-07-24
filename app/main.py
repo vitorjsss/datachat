@@ -1,134 +1,70 @@
 """
-DataChat NoSQL — Protótipo da interface (Semana 1).
+DataChat NoSQL — Interface Streamlit (Semana 2).
 
-Valida o fluxo da aplicação antes da integração com o backend e o LLM.
-Todos os dados são simulados (mock). Nenhuma conexão real com MongoDB
-ou com API de LLM acontece aqui.
+Religado ao backend real: core/orquestrador.py coordena esquema → tradutor
+(Gemini) → validador → executor → explicador (Gemini). Nenhum dado é mais
+simulado — cada pergunta chama a API do Gemini de verdade.
 
 Rodar:
     streamlit run app/main.py
 """
 
 import json
-import time
+import os
 from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
+from google import genai
+from pymongo import MongoClient
+
+from core.esquema import informacoes_colecao
+from core.orquestrador import responder
+
+load_dotenv()
 
 st.set_page_config(page_title="DataChat NoSQL", page_icon="◆", layout="wide")
 
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB = os.getenv("MONGO_DB", "datachat")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+EXEMPLOS = [
+    "Quais os produtos com pior avaliação média, entre os que têm pelo menos 20 avaliações?",
+    "Qual a distribuição das notas na base?",
+    "Como evoluiu o volume de avaliações e a nota média por ano, a partir de 2018?",
+    "Quais atributos existem no campo details dos produtos e com que frequência aparecem?",
+    "Quais os 5 produtos que concentram mais avaliações?",
+]
+
 # ─────────────────────────────────────────────────────────────────────
-# MOCK DATA — substituído pelo backend real na Semana 2
+# CONEXÕES — cacheadas para não reabrir a cada rerun do Streamlit
 # ─────────────────────────────────────────────────────────────────────
 
-MOCK = {
-    "quais produtos concentram mais avaliações?": {
-        "query": [
-            {"$group": {"_id": "$parent_asin", "avaliacoes": {"$sum": 1},
-                        "nota_media": {"$avg": "$rating"}}},
-            {"$sort": {"avaliacoes": -1}},
-            {"$limit": 5},
-            {"$lookup": {"from": "products", "localField": "_id",
-                         "foreignField": "parent_asin", "as": "produto"}},
-            {"$unwind": "$produto"},
-            {"$project": {"_id": 0, "nome": "$produto.title",
-                          "avaliacoes": 1, "nota_media": 1}},
-        ],
-        "colecao": "reviews",
-        "resultados": [
-            {"nome": "Amazon Reload", "avaliacoes": 36863, "nota_media": 4.60},
-            {"nome": "Amazon.com Gift Card in a Holiday Gift Box (Various Designs)", "avaliacoes": 14912, "nota_media": 4.74},
-            {"nome": "Amazon.com Gift Card in Various Gift Boxes", "avaliacoes": 6940, "nota_media": 4.58},
-            {"nome": "Amazon Reload", "avaliacoes": 6635, "nota_media": 4.35},
-            {"nome": "Amazon.com Gift Card in a Reveal (Various Designs)", "avaliacoes": 6329, "nota_media": 4.68},
-        ],
-        "explicacao": (
-            "O **Amazon Reload** concentra sozinho **36.863 avaliações — "
-            "24,2% de toda a base** de 152.410 reviews. Os 5 produtos mais avaliados "
-            "somam mais de 40% da base — resultado medido diretamente na Consulta 8 "
-            "de `scripts/consultas.py`.\n\n"
-            "É uma cauda longa extrema: a média de 134 avaliações por produto esconde "
-            "esse desequilíbrio, então qualquer ranking por volume precisa de cuidado "
-            "— é por isso que as consultas de \"melhor/pior produto\" usam um corte "
-            "mínimo de avaliações antes de ordenar."
-        ),
-    },
-    "qual a distribuição das notas?": {
-        "query": [
-            {"$group": {"_id": "$rating", "total": {"$sum": 1}}},
-            {"$sort": {"_id": 1}},
-        ],
-        "colecao": "reviews",
-        "resultados": [
-            {"_id": 1.0, "total": 12326},
-            {"_id": 2.0, "total": 1873},
-            {"_id": 3.0, "total": 3271},
-            {"_id": 4.0, "total": 6692},
-            {"_id": 5.0, "total": 128248},
-        ],
-        "explicacao": (
-            "A base tem **152.410** avaliações, e a distribuição é assimétrica em "
-            "grau extremo: **84,1%** são 5 estrelas e **8,1%** são 1 estrela — quase "
-            "sem meio-termo.\n\n"
-            "Faz sentido para o produto: um vale-presente ou funciona como esperado "
-            "(código válido, saldo correto, chegou a tempo) ou falha por completo "
-            "(código inválido, já resgatado, nunca chegou). Não existe \"vale-presente "
-            "razoável\" para avaliar com 3 estrelas."
-        ),
-    },
-    "quantas avaliações verificadas existem por ano?": {
-        "query": [
-            {"$match": {"verified_purchase": True,
-                        "review_date": {"$gte": {"$date": "2019-01-01T00:00:00Z"}}}},
-            {"$group": {"_id": {"ano": {"$year": "$review_date"}},
-                        "total": {"$sum": 1}, "nota_media": {"$avg": "$rating"}}},
-            {"$sort": {"_id.ano": 1}},
-        ],
-        "colecao": "reviews",
-        "resultados": [
-            {"ano": 2019, "total": 13820, "nota_media": 4.58},
-            {"ano": 2020, "total": 21140, "nota_media": 4.61},
-            {"ano": 2021, "total": 23705, "nota_media": 4.59},
-            {"ano": 2022, "total": 18932, "nota_media": 4.55},
-            {"ano": 2023, "total": 11077, "nota_media": 4.57},
-        ],
-        "explicacao": (
-            "O volume de avaliações verificadas cresceu **71%** entre 2019 e 2021, "
-            "com pico em **2021 (23.705)** — coerente com o aumento de compras online "
-            "durante a pandemia.\n\n"
-            "A queda em 2022 e 2023 tem duas leituras possíveis: retração real do "
-            "volume ou corte da coleta em setembro de 2023 (a base vai até "
-            "06/09/2023), o que deixa o último ano incompleto. A nota média é estável, "
-            "entre 4,55 e 4,61, refletindo a distribuição em J da base inteira."
-        ),
-    },
-}
 
-EXEMPLOS = list(MOCK.keys())
-
-ESQUEMA = {
-    "reviews": ["rating: double", "title: string", "text: string", "asin: string",
-                "parent_asin: string", "user_id: string", "review_date: date",
-                "verified_purchase: bool", "helpful_vote: int", "images: array"],
-    "products": ["parent_asin: string", "title: string", "main_category: string",
-                 "average_rating: double", "rating_number: int", "price: double|null",
-                 "store: string", "features: array", "categories: array",
-                 "details: object", "images: array"],
-}
+@st.cache_resource
+def obter_db():
+    cliente = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    cliente.admin.command("ping")
+    return cliente[MONGO_DB]
 
 
-def consultar_mock(pergunta: str):
-    """Placeholder do orquestrador. Semana 2: chama core/orquestrador.py."""
-    time.sleep(1.2)  # simula latência do LLM
-    chave = pergunta.strip().lower()
-    if chave in MOCK:
-        return MOCK[chave]
-    for k, v in MOCK.items():
-        if any(p in chave for p in k.split() if len(p) > 4):
-            return v
-    return None
+@st.cache_resource
+def obter_cliente_llm():
+    if not GOOGLE_API_KEY:
+        return None
+    return genai.Client(api_key=GOOGLE_API_KEY)
 
+
+try:
+    db = obter_db()
+    erro_conexao = None
+except Exception as e:  # conexão recusada, host errado etc.
+    db = None
+    erro_conexao = str(e)
+
+cliente_llm = obter_cliente_llm()
 
 # ─────────────────────────────────────────────────────────────────────
 # ESTADO
@@ -147,14 +83,23 @@ if "pergunta_atual" not in st.session_state:
 
 with st.sidebar:
     st.markdown("### Conexão")
-    st.warning("Modo protótipo — dados simulados", icon="⚠")
-    st.caption("Banco: `datachat` · Coleções: `reviews`, `products`")
+    if erro_conexao:
+        st.error(f"MongoDB não conectou: {erro_conexao}", icon="⚠")
+    else:
+        st.success(f"MongoDB `{MONGO_DB}` conectado", icon="✓")
 
-    st.markdown("### Esquema")
-    for colecao, campos in ESQUEMA.items():
-        with st.expander(f"`{colecao}`"):
-            for campo in campos:
-                st.caption(f"· {campo}")
+    if not GOOGLE_API_KEY:
+        st.error("GOOGLE_API_KEY não definida no .env", icon="⚠")
+    else:
+        st.success("Gemini configurado", icon="✓")
+
+    if db is not None:
+        st.markdown("### Esquema")
+        for colecao in ("reviews", "products"):
+            info = informacoes_colecao(db, colecao)
+            with st.expander(f"`{colecao}` — {info['quantidade_registros']:,} docs"):
+                for campo in info["campos"]:
+                    st.caption(f"· {campo}")
 
     st.markdown("### Histórico")
     if not st.session_state.historico:
@@ -175,20 +120,23 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────
 
 st.title("DataChat NoSQL")
-st.caption("Pergunte em português. A aplicação traduz para MongoDB, executa e explica o resultado. "
-           "Base: Amazon Reviews 2023 · categoria Gift_Cards · 152.410 avaliações.")
+st.caption("Pergunte em português. O Gemini traduz para MongoDB, executa e explica o resultado. "
+           "Base: Amazon Reviews 2023 · categoria Gift_Cards.")
 
 st.divider()
 
 pergunta = st.text_input(
     "Sua pergunta",
     value=st.session_state.pergunta_atual,
-    placeholder="Ex.: quais produtos concentram mais avaliações?",
+    placeholder="Ex.: quais os produtos com pior avaliação média?",
 )
 
 col_botao, col_exemplos = st.columns([1, 3])
 with col_botao:
-    consultar = st.button("Consultar", type="primary", use_container_width=True)
+    consultar = st.button(
+        "Consultar", type="primary", use_container_width=True,
+        disabled=db is None or cliente_llm is None,
+    )
 with col_exemplos:
     escolha = st.selectbox("Ou use um exemplo", ["—"] + EXEMPLOS,
                            label_visibility="collapsed")
@@ -203,16 +151,16 @@ with col_exemplos:
 if consultar and pergunta.strip():
     with st.status("Processando…", expanded=True) as status:
         st.write("Carregando o esquema das coleções")
-        time.sleep(0.3)
-        st.write("Traduzindo a pergunta para MongoDB")
-        resposta = consultar_mock(pergunta)
+        st.write("Traduzindo a pergunta para MongoDB (Gemini)")
         st.write("Validando a consulta gerada")
-        time.sleep(0.3)
         st.write("Executando no MongoDB")
-        time.sleep(0.3)
-        st.write("Redigindo a explicação")
-        time.sleep(0.3)
-        status.update(label="Pronto", state="complete", expanded=False)
+        st.write("Redigindo a explicação (Gemini)")
+        resposta = responder(pergunta, db, cliente_llm)
+        status.update(
+            label="Pronto" if not resposta["erro"] else "Erro",
+            state="complete" if not resposta["erro"] else "error",
+            expanded=False,
+        )
 
     st.session_state.resposta = resposta
     st.session_state.pergunta_atual = pergunta
@@ -231,8 +179,11 @@ elif consultar:
 
 resposta = st.session_state.resposta
 
-if resposta is None and st.session_state.historico:
-    st.error("Não consegui traduzir essa pergunta. Tente reformular ou use um dos exemplos.")
+if resposta and resposta["erro"]:
+    st.error(resposta["erro"])
+    if resposta.get("detalhe_tecnico"):
+        with st.expander("Detalhe técnico"):
+            st.code(resposta["detalhe_tecnico"])
 
 elif resposta:
     aba_resposta, aba_query, aba_dados = st.tabs(
@@ -241,30 +192,36 @@ elif resposta:
 
     with aba_resposta:
         st.markdown(resposta["explicacao"])
+        if resposta["tentativas"] > 1:
+            st.caption(f"(precisou de autocorreção — {resposta['tentativas']} tentativas)")
 
     with aba_query:
         st.caption(f"Coleção: `{resposta['colecao']}` · "
-                   f"{len(resposta['query'])} estágios de agregação")
+                   f"{len(resposta['pipeline'])} estágios · {resposta['tempo_s']}s")
         st.code(
             f"db.{resposta['colecao']}.aggregate(\n"
-            + json.dumps(resposta["query"], indent=2, ensure_ascii=False)
+            + json.dumps(resposta["pipeline"], indent=2, ensure_ascii=False)
             + "\n)",
             language="javascript",
         )
 
     with aba_dados:
-        df = pd.DataFrame(resposta["resultados"])
-        c1, c2 = st.columns([1, 1])
-        c1.metric("Documentos retornados", len(df))
-        c2.metric("Tempo de execução", "412 ms")
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        resultados = resposta["resultados"]
+        if not resultados:
+            st.info("A consulta rodou sem erro, mas não retornou documentos.")
+        else:
+            df = pd.DataFrame(resultados)
+            c1, c2 = st.columns([1, 1])
+            c1.metric("Documentos retornados", len(df))
+            c2.metric("Tempo total", f"{resposta['tempo_s']}s")
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
-        numericas = df.select_dtypes("number").columns
-        if len(numericas) and len(df) > 1:
-            st.bar_chart(df.set_index(df.columns[0])[numericas[-1]])
+            numericas = df.select_dtypes("number").columns
+            if len(numericas) and len(df) > 1:
+                st.bar_chart(df.set_index(df.columns[0])[numericas[-1]])
 
-        st.download_button("Baixar CSV", df.to_csv(index=False),
-                           "resultados.csv", "text/csv")
+            st.download_button("Baixar CSV", df.to_csv(index=False),
+                               "resultados.csv", "text/csv")
 
 else:
     st.markdown(
@@ -274,4 +231,4 @@ else:
     )
 
 st.divider()
-st.caption("Protótipo — Semana 1 · Integração com LLM e MongoDB prevista para a Semana 2.")
+st.caption("Backend real — Gemini (gemini-flash-latest) + MongoDB. Semana 2.")

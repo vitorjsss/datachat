@@ -614,6 +614,8 @@ Justificativa: o núcleo do projeto é a **tradução para uma DSL estruturada c
 
 **Mitigação de risco — a apresentação não pode depender de internet.** Manteremos um **modo demo com respostas em cache**: um dicionário `pergunta → query` gravado em disco para as perguntas da demonstração. Se a API cair na hora, a demo continua. Não é trapaça, é engenharia defensiva, e vale dizer isso em voz alta.
 
+> A decisão final entre os candidatos acima — com comparação medida, não estimada — está em `docs/RELATORIO_SEMANA2.md`, Seção 2.
+
 ### 5.5 LangChain — recomendamos NÃO usar
 
 Esta é a nossa crítica principal ao stack sugerido.

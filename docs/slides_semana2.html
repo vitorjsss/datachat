@@ -1,0 +1,527 @@
+<title>DataChat NoSQL — Semana 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Tema claro fixo, de propósito — deck pensado para projetor em sala de aula,
+     não segue o esquema de cores do sistema do apresentador. */
+  :root {
+    --ink: #12181a;
+    --ink-soft: #4c5a5c;
+    --ink-faint: #7c8b8c;
+    --paper: #eef2ee;
+    --panel: #ffffff;
+    --line: rgba(18, 24, 26, 0.13);
+    --accent: #1f7a5c;
+    --accent-strong: #145940;
+    --accent-soft: #d9ecdf;
+    --danger: #b5433a;
+    --code-bg: #10161a;
+    --code-ink: #d9e3de;
+    --code-accent: #6bd6a8;
+    --code-muted: #7d9490;
+    --shadow: 0 20px 45px rgba(15, 25, 22, 0.14);
+    --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    color-scheme: light;
+  }
+  ::selection { background: var(--accent-soft); }
+
+  .deck { height: 100vh; height: 100dvh; overflow: hidden; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: clamp(26px, 4.6vw, 68px) clamp(26px, 7vw, 104px);
+    opacity: 0;
+    transition: opacity 0.32s ease;
+  }
+  .slide.is-active { display: flex; opacity: 1; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--accent); display: inline-block; }
+
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.1;
+    text-wrap: balance;
+    margin: 0 0 20px;
+    color: var(--ink);
+  }
+  h1 { font-size: clamp(36px, 5.2vw, 60px); }
+  h2 { font-size: clamp(30px, 3.9vw, 46px); }
+
+  .lede {
+    font-size: clamp(18px, 1.85vw, 22px);
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 0 0 8px;
+  }
+  .lede code { font-family: var(--font-mono); font-size: 0.86em; color: var(--ink); }
+
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(16px, 2.2vw, 26px);
+    min-height: 0;
+    font-size: clamp(17px, 1.6vw, 19px);
+  }
+
+  /* ---------- title ---------- */
+  .title-slide { justify-content: center; }
+  .title-slide .team {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--ink-faint);
+  }
+  .title-slide .team span::before { content: "· "; color: var(--accent); }
+  .title-slide .team span:first-child::before { content: ""; }
+  .title-mark {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    color: var(--ink-faint);
+    margin-top: auto;
+    padding-top: 26px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ---------- scope grid ---------- */
+  .scope-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .scope-cell { background: var(--panel); padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 9px; }
+  .scope-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .scope-title { font-family: var(--font-display); font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+  .scope-where { font-family: var(--font-mono); font-size: 13px; color: var(--ink-faint); margin-top: auto; }
+
+  .scope-note {
+    font-size: 15.5px;
+    color: var(--ink-faint);
+    border-left: 3px solid var(--line);
+    padding-left: 14px;
+    line-height: 1.55;
+  }
+
+  /* ---------- code block ---------- */
+  .code {
+    font-family: var(--font-mono);
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 20px 22px;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+  .code .k { color: var(--code-accent); }
+  .code .m { color: var(--code-muted); }
+
+  /* ---------- few-shot list ---------- */
+  .fewshot-list { display: flex; flex-direction: column; gap: 11px; }
+  .fewshot-item {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 18px;
+    align-items: center;
+    padding: 15px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .fewshot-item .tag {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    padding: 5px 9px;
+    border-radius: 5px;
+    text-align: center;
+  }
+  .fewshot-item .desc { font-size: 16px; color: var(--ink-soft); line-height: 1.4; }
+  .fewshot-item .desc b { color: var(--ink); }
+
+  /* ---------- comparison table ---------- */
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 17px; }
+  table.cmp th, table.cmp td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  table.cmp thead th {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  table.cmp td.metric { color: var(--ink-soft); }
+  table.cmp td.win { color: var(--accent-strong); font-weight: 700; font-variant-numeric: tabular-nums; }
+  table.cmp td.lose { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .error-list { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
+  .error-item {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--danger);
+    border-radius: 6px;
+  }
+  .error-item code { font-family: var(--font-mono); font-size: 14.5px; color: var(--danger); flex-shrink: 0; }
+  .error-item span { font-size: 16px; color: var(--ink-soft); line-height: 1.4; }
+
+  /* ---------- stat row ---------- */
+  .stat-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 24px 24px 22px; box-shadow: var(--shadow); }
+  .stat-card .who { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 11px; }
+  .stat-card .num { font-family: var(--font-display); font-size: 48px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .stat-card .num small { font-size: 21px; color: var(--ink-faint); font-weight: 500; }
+  .stat-card .cap { font-size: 15px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+  .stat-card.win { border-color: var(--accent); background: var(--accent-soft); }
+  .stat-card.win .num { color: var(--accent-strong); }
+
+  /* ---------- out-of-scope table ---------- */
+  table.oos { width: 100%; border-collapse: collapse; font-size: 16px; }
+  table.oos th, table.oos td { text-align: left; padding: 12px 15px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.oos thead th { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
+  table.oos td.item { color: var(--ink); font-weight: 600; }
+  table.oos td.where { font-family: var(--font-mono); font-size: 13.5px; color: var(--ink-faint); }
+  .week-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 5px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+
+  /* ---------- next steps ---------- */
+  .steps { display: flex; flex-direction: column; gap: 2px; }
+  .step-row { display: grid; grid-template-columns: 30px 1fr; gap: 15px; padding: 15px 4px; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .step-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); align-self: center; justify-self: center; }
+  .step-row .txt { font-size: 17px; color: var(--ink-soft); line-height: 1.4; }
+  .step-row .txt b { color: var(--ink); }
+
+  .closing { justify-content: flex-start; }
+  .closing .big {
+    font-family: var(--font-display);
+    font-size: clamp(23px, 2.6vw, 30px);
+    line-height: 1.45;
+    text-wrap: balance;
+    max-width: 52ch;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ---------- nav chrome ---------- */
+  .progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--line); z-index: 5; }
+  .progress-bar { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+  .nav-chrome {
+    position: absolute;
+    bottom: clamp(18px, 3vw, 30px);
+    right: clamp(24px, 6vw, 90px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    color: var(--ink-faint);
+    z-index: 5;
+  }
+  .nav-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 17px;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+  }
+  .nav-btn:hover { border-color: var(--accent); }
+  .nav-btn:active { transform: scale(0.94); }
+  .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav-btn[disabled] { opacity: 0.35; cursor: default; }
+  .counter { font-variant-numeric: tabular-nums; min-width: 46px; text-align: center; }
+
+  .slide-idx {
+    position: absolute;
+    top: clamp(18px, 3vw, 26px);
+    left: clamp(24px, 6vw, 90px);
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    z-index: 5;
+  }
+
+  @media (max-width: 760px) {
+    .scope-grid, .stat-row { grid-template-columns: 1fr; }
+    .fewshot-item { grid-template-columns: 1fr; }
+    table.cmp, table.oos { font-size: 14.5px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+  @media print {
+    .nav-chrome, .progress, .slide-idx { display: none !important; }
+    .deck { height: auto; overflow: visible; }
+    .slide { position: static; display: flex !important; opacity: 1 !important; height: 100vh; page-break-after: always; }
+  }
+</style>
+
+<div class="deck" id="deck">
+
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="slide-idx" id="slideIdx">01 / 09 — DATACHAT NOSQL</div>
+
+  <!-- 1 — TITLE -->
+  <section class="slide title-slide is-active">
+    <div class="eyebrow">Semana 2 — Apresentação</div>
+    <h1>Criação de prompts, geração automática<br>de consultas e validação de resultados</h1>
+    <p class="lede">DataChat NoSQL — sistema de consulta em linguagem natural sobre MongoDB, com tradução de perguntas por meio de um modelo de linguagem. Esta apresentação abrange os itens do cronograma do projeto previstos para a Semana 2.</p>
+    <div class="team">
+      <span>Gabriel Azevedo Lira de Farias</span>
+      <span>João Pedro de Queiroz Dantas</span>
+      <span>Vitor Jesus Mamede Soares</span>
+      <span>Vítor Raimundo Fernandes Gabínio</span>
+    </div>
+    <div class="title-mark"><span>docs/RELATORIO_SEMANA2.md</span><span>Amazon Reviews 2023 · Categoria Gift_Cards</span></div>
+  </section>
+
+  <!-- 2 — OBJETIVO -->
+  <section class="slide">
+    <div class="eyebrow">01 — Objetivo da semana</div>
+    <h2>Escopo definido pelo cronograma do projeto</h2>
+    <p class="lede">O item "desenvolver consultas MongoDB" foi entregue na Semana 1, na forma de oito consultas documentadas. Os itens restantes, cobertos nesta apresentação, são os seguintes.</p>
+    <div class="slide-body">
+      <div class="scope-grid">
+        <div class="scope-cell"><div class="scope-num">Item 1</div><div class="scope-title">Criação de prompts</div><div class="scope-where">core/esquema.py · core/tradutor.py</div></div>
+        <div class="scope-cell"><div class="scope-num">Item 2</div><div class="scope-title">Geração automática de consultas</div><div class="scope-where">core/tradutor.py · RF04</div></div>
+        <div class="scope-cell"><div class="scope-num">Item 3</div><div class="scope-title">Validação de resultados</div><div class="scope-where">scripts/comparar_llms.py</div></div>
+      </div>
+      <p class="scope-note">A integração completa do backend, o histórico de consultas e o tratamento de erros correspondem à Semana 3 no cronograma do projeto; a interface corresponde à Semana 4. Essa divisão é detalhada no Slide 8.</p>
+    </div>
+  </section>
+
+  <!-- 3 — PROMPT ENGINEERING -->
+  <section class="slide">
+    <div class="eyebrow">02 — Criação de prompts</div>
+    <h2>Estrutura do prompt de sistema</h2>
+    <p class="lede">O prompt utilizado é composto por três elementos: o contexto de esquema da base de dados, o formato de saída exigido do modelo e um conjunto de exemplos de referência (few-shot).</p>
+    <div class="slide-body">
+      <div class="fewshot-list">
+        <div class="fewshot-item"><div class="tag">Exemplo 1</div><div class="desc">Filtro simples — estágios <b>$match, $sort e $limit</b>, sem uso de find() separado</div></div>
+        <div class="fewshot-item"><div class="tag">Exemplo 2</div><div class="desc">Junção entre coleções — <b>$lookup e $unwind</b>, identificado como o padrão de maior dificuldade de geração</div></div>
+        <div class="fewshot-item"><div class="tag">Exemplo 3</div><div class="desc">Esquema aberto — <b>$objectToArray e $unwind</b>, para descoberta dinâmica de campos em <code style="font-family:inherit">details</code></div></div>
+      </div>
+      <div class="code">
+<span class="m">// core/esquema.py — o contexto não é uma string fixa</span><br>
+price: double | null (<span class="k">33,4%</span> dos documentos) — atenção ao filtrar<br>
+store: string (<span class="k">98,5%</span> dos documentos)
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 — LLM COMPARISON -->
+  <section class="slide">
+    <div class="eyebrow">03 — Seleção do modelo de linguagem</div>
+    <h2>Comparação empírica entre modelos</h2>
+    <p class="lede">Antes da definição do prompt, foram avaliadas as mesmas sete perguntas de maior complexidade do projeto em dois modelos gratuitos, sob as mesmas condições. Ver <code style="font-family:var(--font-mono); font-size:0.85em;">scripts/comparar_llms.py</code>.</p>
+    <div class="slide-body">
+      <table class="cmp">
+        <thead><tr><th></th><th>Gemini · gemini-flash-lite-latest</th><th>Llama 3.2 3B · execução local</th></tr></thead>
+        <tbody>
+          <tr><td class="metric">Respostas com JSON válido</td><td class="win">7 de 7</td><td class="lose">4 de 7</td></tr>
+          <tr><td class="metric">Execução sem erro no MongoDB</td><td class="win">7 de 7</td><td class="lose">1 de 7</td></tr>
+          <tr><td class="metric">Tempo médio de resposta</td><td class="win">4,6 segundos</td><td class="lose">7,3 segundos</td></tr>
+          <tr><td class="metric">Custo</td><td class="win">Gratuito</td><td class="lose">Gratuito</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5 — WHY LLAMA LOST -->
+  <section class="slide">
+    <div class="eyebrow">03 — Seleção do modelo de linguagem</div>
+    <h2>Falhas observadas no modelo local</h2>
+    <p class="lede">O ambiente de desenvolvimento é um MacBook Air M1 com 8 GB de memória RAM unificada, o que inviabilizou o uso do Llama 3 8B (aproximadamente 4,7 GB apenas para o modelo). Foi avaliado o maior modelo compatível: Llama 3.2 3B (aproximadamente 2 GB).</p>
+    <div class="slide-body">
+      <div class="error-list">
+        <div class="error-item"><code>JSON inválido</code><span>Omissão de aspas em operadores como <code style="font-family:inherit">$gt</code> e <code style="font-family:inherit">$avg</code>; interrupção da resposta no meio de um pipeline extenso</span></div>
+        <div class="error-item"><code>Location 28811</code><span>Uso de uma opção inexistente no MongoDB — <code style="font-family:inherit">preserveNullValues</code> dentro do estágio <code style="font-family:inherit">$unwind</code></span></div>
+        <div class="error-item"><code>Location 17276</code><span>Referência a uma variável indefinida dentro do operador <code style="font-family:inherit">$objectToArray</code> — <code style="font-family:inherit">$$value</code> não é válida nesse contexto</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 — RF04 GENERATION -->
+  <section class="slide">
+    <div class="eyebrow">04 — Geração automática de consultas (RF04)</div>
+    <h2>Implementação da tradução pergunta–consulta</h2>
+    <p class="lede">Implementado em <code style="font-family:var(--font-mono); font-size:0.85em;">core/tradutor.py</code>: uma única função realiza a chamada ao modelo Gemini e retorna a saída em um formato estruturado padronizado.</p>
+    <div class="slide-body">
+      <div class="code" style="font-size:16px;">
+        <span class="m">traduzir(pergunta, esquema_contexto, cliente)</span><br><br>
+        <span class="m">// parâmetros da chamada</span><br>
+        temperature = <span class="k">0</span><br>
+        response_mime_type = <span class="k">"application/json"</span><br><br>
+        <span class="m">// formato de saída padronizado</span><br>
+        { <span class="k">"colecao"</span>: <span class="k">"reviews"</span> | <span class="k">"products"</span>, <span class="k">"pipeline"</span>: [...] }
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 — VALIDAR RESULTADOS -->
+  <section class="slide">
+    <div class="eyebrow">05 — Validação de resultados</div>
+    <h2>Critérios de validação</h2>
+    <p class="lede">Este processo não deve ser confundido com o validador de segurança, previsto para a Semana 3. Nesta etapa, validar significa confirmar que o pipeline gerado é executável e produz um resultado coerente com a pergunta original.</p>
+    <div class="slide-body">
+      <div class="stat-row">
+        <div class="stat-card win"><div class="who">JSON válido</div><div class="num">7<small>de 7</small></div><div class="cap">Todas as respostas do modelo foram interpretadas sem erro</div></div>
+        <div class="stat-card win"><div class="who">Execução sem erro no MongoDB</div><div class="num">7<small>de 7</small></div><div class="cap">Consulta agregada real, executada contra a base carregada</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 — OUT OF SCOPE -->
+  <section class="slide">
+    <div class="eyebrow">06 — Delimitação do escopo</div>
+    <h2>Itens não incluídos nesta entrega</h2>
+    <p class="lede">Um executor mínimo já existe no repositório, necessário apenas para a execução das consultas na etapa de validação (Slide 7). Os itens a seguir, no entanto, não são apresentados como entrega da Semana 2.</p>
+    <div class="slide-body">
+      <table class="oos">
+        <thead><tr><th>Item</th><th>Protótipo em</th><th>Previsto para</th></tr></thead>
+        <tbody>
+          <tr><td class="item">Integração completa entre MongoDB e o LLM</td><td class="where">core/orquestrador.py</td><td><span class="week-tag">Semana 3</span></td></tr>
+          <tr><td class="item">Bloqueio de operações destrutivas (RF07)</td><td class="where">core/validador.py</td><td><span class="week-tag">Semana 3</span></td></tr>
+          <tr><td class="item">Histórico de consultas (RF08)</td><td class="where">app/main.py</td><td><span class="week-tag">Semana 3</span></td></tr>
+          <tr><td class="item">Tratamento de erros (RF09)</td><td class="where">core/orquestrador.py</td><td><span class="week-tag">Semana 3</span></td></tr>
+          <tr><td class="item">Interface final integrada</td><td class="where">app/main.py</td><td><span class="week-tag">Semana 4</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9 — NEXT STEPS / CLOSING -->
+  <section class="slide closing">
+    <div class="eyebrow">07 — Próximos passos</div>
+    <div class="slide-body" style="justify-content: flex-start; gap: 32px;">
+      <p class="big">Concluídas as etapas de criação de prompts e geração automática de consultas, a próxima fase, prevista para a Semana 3, é a integração completa do backend.</p>
+      <div class="steps">
+        <div class="step-row"><div class="dot"></div><div class="txt"><b>Integração entre MongoDB e o LLM</b> em um fluxo único de backend, substituindo os scripts isolados atuais</div></div>
+        <div class="step-row"><div class="dot"></div><div class="txt"><b>Formalização do bloqueio de operações destrutivas</b> (RF07), acompanhada de testes adversariais</div></div>
+        <div class="step-row"><div class="dot"></div><div class="txt"><b>Implementação do histórico de consultas</b> (RF08)</div></div>
+        <div class="step-row"><div class="dot"></div><div class="txt"><b>Tratamento de erros</b> — pergunta ambígua, campo inexistente e consulta sem resultado (RF09)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="nav-chrome">
+    <button class="nav-btn" id="prevBtn" aria-label="Slide anterior">‹</button>
+    <span class="counter"><span id="counterNow">1</span> / <span id="counterTotal">9</span></span>
+    <button class="nav-btn" id="nextBtn" aria-label="Próximo slide">›</button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+    var total = slides.length;
+    var idx = 0;
+
+    var prevBtn = document.getElementById("prevBtn");
+    var nextBtn = document.getElementById("nextBtn");
+    var counterNow = document.getElementById("counterNow");
+    var counterTotal = document.getElementById("counterTotal");
+    var progressBar = document.getElementById("progressBar");
+    var slideIdx = document.getElementById("slideIdx");
+
+    counterTotal.textContent = String(total);
+
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+    function render() {
+      slides.forEach(function (s, i) { s.classList.toggle("is-active", i === idx); });
+      counterNow.textContent = String(idx + 1);
+      progressBar.style.width = ((idx + 1) / total) * 100 + "%";
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === total - 1;
+      slideIdx.textContent = pad(idx + 1) + " / " + pad(total) + " — DATACHAT NOSQL";
+    }
+
+    function go(delta) { idx = Math.max(0, Math.min(total - 1, idx + delta)); render(); }
+
+    prevBtn.addEventListener("click", function () { go(-1); });
+    nextBtn.addEventListener("click", function () { go(1); });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { go(1); e.preventDefault(); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { go(-1); e.preventDefault(); }
+      if (e.key === "Home") { idx = 0; render(); }
+      if (e.key === "End") { idx = total - 1; render(); }
+    });
+
+    var touchStartX = null;
+    document.addEventListener("touchstart", function (e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener("touchend", function (e) {
+      if (touchStartX === null) return;
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 60) { go(dx < 0 ? 1 : -1); }
+      touchStartX = null;
+    }, { passive: true });
+
+    render();
+  })();
+</script>
